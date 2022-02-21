@@ -67,11 +67,12 @@ end
 
 #time parameter
 t=0
-dt = 0.0025
+dt = 0.001
 
 ηec=[]
 anime = @animate for i in 1:800
     #Energy Conservative scheme, rk4
+    global Vec, t#WTF is going on (didn't need this line previously)
     k1 = dVdt(Vec)
     k2 = dVdt(Vec + 0.5dt*k1)
     k3 = dVdt(Vec + 0.5dt*k2)

@@ -5,7 +5,7 @@ using Plots
 #Domain: [-1,1]
 
 order=4
-N=16 #number of element
+N=32 #number of element
 h=1/N #half of element size
 
 #create quadrature points
@@ -39,7 +39,7 @@ for i in 1:order
 end
 
 #global mass matrix
-Mglb = Diagonal(reduce(vcat, [weights for i in 1:N]))
+Mglb = Diagonal(reduce(vcat, [h*weights for i in 1:N]))
 
 #global stiffness matrix
 Qglb = zeros(order*N, order*N)
@@ -113,8 +113,12 @@ end
 t=0
 dt = 0.002
 
+function segment(V)
+    return reduce(hcat, [V[(order*i+1):(order*(i+1))] for i in 0:(N-1)])
+end
+
 ηec=[]
-anime = @animate for i in 1:800
+anime = @animate for i in 1:1200
     #Energy Conservative scheme, rk4
     global Vec, t#WTF is going on (didn't need this line previously)
     k1 = dVdt(Vec)
@@ -126,7 +130,9 @@ anime = @animate for i in 1:800
     #plot
     AH = Vec[:,1]
     H = AH./(A')
-    p=plot(X, H, color="blue",ylims=(0,0.25),lab="Energy Conservative")
+    #p=plot(segment(X), segment(H), color="blue",ylims=(0,0.25),lab="Energy Conservative",label=false)
+    plot(segment(X),segment(H),ylims=(0,0.21),legend=false)
+    p=scatter!(segment(X),segment(H),legend=false)
     display(p)
     t+=dt
 end
@@ -134,6 +140,6 @@ end
 total_entropy(Vec)
 
 
-plot(1:800, ηec,label="Entropy")
+plot(1:1200, ηec,label="Entropy")
 
-gif(anime, "D:\\Rice\\spring2022\\Q1DSWE_project\\EC_Q1DSWE_DG_1.gif", fps = 30)
+gif(anime, "D:\\Rice\\spring2022\\Q1DSWE_project\\EC_Q1DSWE_DG_2.gif", fps = 30)
