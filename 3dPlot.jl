@@ -16,8 +16,8 @@ X(u,v) = u
 Y(u,v) = 0.5a(u)
 Z(u,v) = 1 .- v .* (1 .- b(u))
 
-U = X
-V = range( 0, 1, length=51)
+U = range(-1, 1,   length=51)
+V = range(0, 1, length=51)
 
 xs = [X(u, v) for u in U, v in V]
 ys = [Y(u, v) for u in U, v in V]
