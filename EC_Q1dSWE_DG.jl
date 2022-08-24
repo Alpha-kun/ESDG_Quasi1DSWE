@@ -1,10 +1,11 @@
 using FastGaussQuadrature
 using LinearAlgebra
 using Plots
+using LaTeXStrings
 
 #Domain: [-1,1]
 
-order=4
+order=3
 N=32 #number of element
 h=1/N #half of element size
 
@@ -62,7 +63,12 @@ g = 1.0
 
 #channel width profile
 function a(x)
-    return 1 #.+ 0.5*sin.(2π*x)
+    return 1 .+ 0.5*sin.(2π*x)
+end
+
+#bottom topography
+function b(x)
+    return 0.05*exp.(-64*(x.+0.25).*(x.+0.25))
 end
 
 #initial height profile
@@ -76,23 +82,25 @@ function total_entropy(V)
     AHU = V[:,2]
     H = AH./A
     U = AHU./AH
-    η = 0.5A.*(g.*H.^2+H.*U.^2)
+    η = 0.5A.*(g.*H.^2+H.*U.^2) + g.*A.*H.*B
     return sum(Mglb*η)
 end
 
-#midpoint of intervals
+#node points
 X=reduce(vcat, [(-1+(2*i-1)*h) .+ h*nodes for i in 1:N])
 #the width vector
 A = a(X)
+#the Bottom vector
+B = b(X)
 #vector of first conserved quantity (volume)
-AH = ψ(X).*A
+AH = (ψ(X)-B).*A
 #vector of second conserved quantity (momentum)
 AHU = 0*X
 
 #solution vectors
 Vec=[AH AHU]
 
-#compute the central difference derivative of a row vector
+#compute the approximate derivative of a row vector
 function Q(x)
     return -Mglb\(Qglb*x)
 end
@@ -104,21 +112,21 @@ function dVdt(V)
     H = AH./A
     U = AHU./AH
     AH′ = -Q(AHU)
-    AHU′ = -0.5*(Q(AHU.*U)+AHU.*Q(U)+U.* Q(AHU)) - g*(AH.*Q(H))
+    AHU′ = -0.5*(Q(AHU.*U)+AHU.*Q(U)+U.* Q(AHU)) - g*(AH.*Q(H)) - g*(AH.*Q(B))
     V′ = [AH′ AHU′];
     return V′
 end
 
 #time parameter
 t=0
-dt = 0.002
+dt = 0.005
 
 function segment(V)
     return reduce(hcat, [V[(order*i+1):(order*(i+1))] for i in 0:(N-1)])
 end
 
 ηec=[]
-anime = @animate for i in 1:1200
+anime = @animate for i in 0:1000
     #Energy Conservative scheme, rk4
     global Vec, t#WTF is going on (didn't need this line previously)
     k1 = dVdt(Vec)
@@ -129,17 +137,26 @@ anime = @animate for i in 1:1200
     push!(ηec, total_entropy(Vec))
     #plot
     AH = Vec[:,1]
-    H = AH./(A')
+    H = AH./A
     #p=plot(segment(X), segment(H), color="blue",ylims=(0,0.25),lab="Energy Conservative",label=false)
-    plot(segment(X),segment(H),ylims=(0,0.21),legend=false)
-    p=scatter!(segment(X),segment(H),legend=false)
+    plot(X,B)
+    plot!(segment(X),segment(H)+segment(B),ylims=(0,0.21),legend=false)
+    p=scatter!(segment(X),segment(H)+segment(B),title="t="*string(round(i*dt,digits=3)))
     display(p)
+    # if i==0
+    #     savefig("D:\\Rice\\spring2022\\RURS\\LAR_t0.png")
+    # end
+    # if i==1000
+    #     plot(segment(X),segment(H),ylims=(0,0.21),legend=false)
+    #     p=scatter!(segment(X),segment(H),title="h(x)")
+    #     savefig("D:\\Rice\\spring2022\\RURS\\LAR_t5_H_only.png")
+    # end
     t+=dt
 end
 
 total_entropy(Vec)
 
 
-plot(1:1200, ηec,label="Entropy")
+plot(1:600, ηec[1:600],label="Entropy")
 
 gif(anime, "D:\\Rice\\spring2022\\Q1DSWE_project\\EC_Q1DSWE_DG_2.gif", fps = 30)
