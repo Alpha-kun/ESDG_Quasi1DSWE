@@ -63,7 +63,7 @@ g = 1.0
 
 #channel width profile
 function a(x)
-    return 1 .+ 0.5*sin.(2π*x)
+    return 0.5 .+ 0.25*sin.(2π*x)
 end
 
 #bottom topography
@@ -119,14 +119,18 @@ end
 
 #time parameter
 t=0
-dt = 0.005
+dt = 0.002
 
+#convert a vector into a matrix, where each column is the nodal values in an element
 function segment(V)
     return reduce(hcat, [V[(order*i+1):(order*(i+1))] for i in 0:(N-1)])
 end
 
+
 ηec=[]
-anime = @animate for i in 0:1000
+total_steps = 100
+
+anime = @animate for i in 0:total_steps
     #Energy Conservative scheme, rk4
     global Vec, t#WTF is going on (didn't need this line previously)
     k1 = dVdt(Vec)
@@ -155,8 +159,7 @@ anime = @animate for i in 0:1000
 end
 
 total_entropy(Vec)
+plot(0:total_steps, ηec,label="Entropy")
 
-
-plot(1:600, ηec[1:600],label="Entropy")
-
-gif(anime, "D:\\Rice\\spring2022\\Q1DSWE_project\\EC_Q1DSWE_DG_2.gif", fps = 30)
+#save gif (if needed)
+#gif(anime, "D:\\Rice\\spring2022\\Q1DSWE_project\\EC_Q1DSWE_DG_2.gif", fps = 30)
