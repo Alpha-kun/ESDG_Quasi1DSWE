@@ -70,7 +70,9 @@ t=0
 dt = 0.001
 
 ηec=[]
-anime = @animate for i in 1:800
+total_steps = 1000
+
+anime = @animate for i in 1:total_steps
     #Energy Conservative scheme, rk4
     global Vec, t#WTF is going on (didn't need this line previously)
     k1 = dVdt(Vec)
@@ -88,8 +90,7 @@ anime = @animate for i in 1:800
 end
 
 total_entropy(Vec)
+plot(1:total_steps, ηec,label="Entropy")
 
-
-plot(1:800, ηec,label="Entropy")
-
-gif(anime, "D:\\Rice\\spring2022\\Q1DSWE_project\\EC_Q1DSWE_FDM_1psin.gif", fps = 30)
+#save gif (if needed)
+#gif(anime, "D:\\Rice\\spring2022\\Q1DSWE_project\\EC_Q1DSWE_FDM_1psin.gif", fps = 30)
